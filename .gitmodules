@@ -1,0 +1,4 @@
+[submodule "latex-g7-32"]
+	path = latex-g7-32
+	url = https://github.com/latex-g7-32/latex-g7-32.git
+	branch = 7.32-2017-dev

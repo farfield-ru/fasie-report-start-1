@@ -1,0 +1,33 @@
+% Промежуточный научно-технический отчёт по этапу 1
+% Грант ФСИ «Старт-1». Оформление по ГОСТ 7.32 (класс G7-32).
+% Титульный лист, список исполнителей и реферат формируются в системе
+% «Фонд-М» и в данный документ не включаются (см. рекомендации ФСИ).
+\documentclass{G7-32}
+\input{preamble}
+
+\begin{document}
+
+\frontmatter % ненумерованная часть
+
+\tableofcontents
+
+\input{sections/intro}
+
+\mainmatter % включает нумерацию разделов
+
+\input{sections/00_method}
+\input{sections/01_urdf}
+\input{sections/02_sdf_stl}
+\input{sections/03_step}
+\input{sections/04_sim_cpu}
+\input{sections/05_gui}
+\input{sections/06_testing}
+\input{sections/07_gpu_ode}
+\input{sections/90_results}
+
+\backmatter % завершение нумерованной части
+
+\input{sections/conclusion}
+\input{sections/biblio}
+
+\end{document}

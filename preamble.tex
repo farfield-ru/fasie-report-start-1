@@ -1,0 +1,86 @@
+% Преамбула отчёта (ГОСТ 7.32).
+% Класс G7-32 уже загружает: fontspec, polyglossia (русский/английский),
+% amsmath, caption (настройки ГОСТ), geometry (поля ГОСТ), titlesec, tikz,
+% multirow, etoolbox. Повторно их не подключаем.
+
+% Моноширинный шрифт (fontspec загружается классом). Liberation Mono входит в
+% образ сборки (пакет fonts-liberation) и содержит кириллицу.
+\setmonofont{Liberation Mono}
+
+% ГОСТ 7.0.11 требует правое поле 15 мм (класс по умолчанию ставит 10 мм).
+\geometry{right=15mm}
+
+% Более мягкая вёрстка абзацев: разрешаем растяжение межсловных интервалов,
+% чтобы длинные идентификаторы кода (\texttt) переносились на новую строку,
+% а не выходили за правое поле.
+\sloppy
+\setlength{\emergencystretch}{3em}
+
+% Математика
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+% Графика
+\usepackage{graphicx}
+\usepackage{float}
+
+% Таблицы
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+
+% Цвет
+\usepackage{xcolor}
+
+% Листинги исходного кода
+\usepackage{listings}
+\definecolor{lstkw}{rgb}{0.0,0.0,0.5}
+\definecolor{lstcomment}{rgb}{0.30,0.45,0.30}
+\definecolor{lststring}{rgb}{0.55,0.10,0.10}
+\lstset{
+  basicstyle=\footnotesize\ttfamily,
+  keywordstyle=\color{lstkw}\bfseries,
+  commentstyle=\color{lstcomment}\itshape,
+  stringstyle=\color{lststring},
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny,
+  showstringspaces=false,
+  tabsize=2,
+  captionpos=b,
+  columns=fullflexible,
+  keepspaces=true,
+}
+% Подпись листингов на русском
+\renewcommand{\lstlistingname}{Листинг}
+
+% Гиперссылки (подключать последними)
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=blue,
+  pdftitle={Промежуточный научно-технический отчёт по этапу 1},
+  pdfauthor={farfield},
+}
+
+% --- Заглушка под скриншот -------------------------------------------------
+% Использование:
+%   \screenshot{<доля \textwidth>}{<подпись рисунка>}{<что заснять>}{<метка>}
+% Рисует обрамлённую область с пояснением; нумеруется как обычный рисунок и
+% попадает в список иллюстраций. Когда изображение готово, заглушку заменяют
+% на \includegraphics из каталога figures/.
+\newcommand{\screenshot}[4]{%
+  \begin{figure}[ht]\centering
+    \setlength{\fboxsep}{0pt}%
+    \fbox{\begin{minipage}[c][0.40\textwidth][c]{#1\textwidth}%
+      \centering
+      \itshape\small[\,ЗАГЛУШКА ДЛЯ СКРИНШОТА\,]\par\medskip
+      \normalfont\small #3\par\medskip
+      \footnotesize\ttfamily figures/#4.png
+    \end{minipage}}%
+    \caption{#2}\label{fig:#4}
+  \end{figure}%
+}

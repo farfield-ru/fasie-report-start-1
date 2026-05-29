@@ -1,0 +1,67 @@
+name: Build report PDF
+
+on:
+  push:
+    branches: ["main"]
+    tags: ["v*"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Образ latex-g7-32 приватный в GHCR, поэтому собираем его из Dockerfile
+      # шаблона. Кэш GHA ускоряет повторные сборки.
+      - name: Build latex-g7-32 image
+        uses: docker/build-push-action@v6
+        with:
+          context: latex-g7-32
+          file: latex-g7-32/docker/Dockerfile
+          tags: fasie-report-builder:latest
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Compile report
+        run: |
+          docker run --rm -v "${{ github.workspace }}":/doc -w /doc \
+            --entrypoint /bin/sh fasie-report-builder:latest /doc/scripts/build.sh
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-pdf
+          path: build/report.pdf
+          if-no-files-found: error
+
+      # Публикация PDF в GitHub Release.
+      # На push в main — перезаписываемый релиз "latest"; по тегам v* — релиз версии.
+      - name: Publish to "latest" release (main)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Последняя сборка отчёта
+          body: |
+            Автоматически собранный PDF промежуточного НТО (этап 1).
+            Сборка из коммита ${{ github.sha }}.
+          files: build/report.pdf
+
+      - name: Publish to versioned release (tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/report.pdf

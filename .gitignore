@@ -1,0 +1,24 @@
+# Артефакты сборки
+build/
+*.pdf
+
+# Вспомогательные файлы LaTeX (на случай локальной сборки вне build/)
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.nlo
+*.nls
+*.ilg
+
+# Файлы окружения задачи
+prompt.txt
+Рекомендации*.doc
+.claude/
