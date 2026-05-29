@@ -21,7 +21,7 @@ jobs:
           submodules: recursive
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # Образ latex-g7-32 приватный в GHCR, поэтому собираем его из Dockerfile
       # шаблона. Кэш GHA ускоряет повторные сборки.
