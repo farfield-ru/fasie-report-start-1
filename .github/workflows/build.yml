@@ -26,7 +26,7 @@ jobs:
       # Образ latex-g7-32 приватный в GHCR, поэтому собираем его из Dockerfile
       # шаблона. Кэш GHA ускоряет повторные сборки.
       - name: Build latex-g7-32 image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: latex-g7-32
           file: latex-g7-32/docker/Dockerfile
