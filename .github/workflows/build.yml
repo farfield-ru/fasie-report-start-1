@@ -51,7 +51,7 @@ jobs:
       # На push в main — перезаписываемый релиз "latest"; по тегам v* — релиз версии.
       - name: Publish to "latest" release (main)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: latest
           name: Последняя сборка отчёта
@@ -62,6 +62,6 @@ jobs:
 
       - name: Publish to versioned release (tag)
         if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: build/report.pdf
