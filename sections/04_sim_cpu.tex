@@ -231,20 +231,32 @@ $\lambda \ge 0$; трение моделируется касательной п
   \label{eq:vel-update}
 \end{equation}
 
-\begin{lstlisting}[language=C++,caption={Шаг симуляции: интегрирование, столкновения, решатель},label=lst:step]
-void step(World& w, float dt, int n_substeps) {
-    const float h = dt / n_substeps;
-    for (int s = 0; s < n_substeps; ++s) {
-        integrate_velocities(w, h);   // v += h * M^-1 * F (симплектический Эйлер)
-        predict_positions(w, h);      // x* = x + h * v
-        auto pairs    = broadphase(w);          // LBVH -> кандидатные пары
-        sort_pairs(pairs);                      // детерминированный порядок
-        auto contacts = narrowphase(w, pairs);  // SAT / GJK+EPA -> контакты
-        solve_xpbd(w, contacts, h);             // позиционные поправки
-        update_velocities(w, h);      // v = (x - x_prev) / h
-    }
-}
-\end{lstlisting}
+\begin{pseudocode}{Алгоритм шага симуляции: интегрирование, столкновения,
+  решатель}{lst:step}
+\pind0 Вход: тела $B$, сочленения $J$, шаг кадра $\Delta t$,
+       число подшагов $n_{\text{sub}}$, итераций $n_{\text{iter}}$\\
+\pind0 $h \leftarrow \Delta t / n_{\text{sub}}$\\
+\pind0 повторить $n_{\text{sub}}$ раз:\\
+\pind1 $\mathbf{v} \leftarrow \mathbf{v} + h\,\mathbf{M}^{-1}\mathbf{F}$;\quad
+       $\mathbf{x} \leftarrow \mathbf{x} + h\,\mathbf{v}$
+       \quad\textit{// симплектический Эйлер \eqref{eq:symplectic}}\\
+\pind1 $P \leftarrow$ широкая фаза (LBVH): кандидатные пары\\
+\pind1 отсортировать $P$ по каноническому ключу $(a, b)$
+       \quad\textit{// детерминизм}\\
+\pind1 $C \leftarrow$ узкая фаза($P$): контакты (точка, нормаль, глубина)\\
+\pind1 $\lambda_c \leftarrow 0$ для каждого ограничения\\
+\pind1 повторить $n_{\text{iter}}$ раз:
+       \quad\textit{// решатель XPBD, схема Гаусса--Зейделя}\\
+\pind2 для каждого ограничения $c \in C \cup J$:\\
+\pind3 $\Delta\lambda \leftarrow -(C + \tilde{\alpha}\lambda_c) /
+       (w + \tilde{\alpha})$;\quad
+       $\lambda_c \leftarrow \max(\lambda_c + \Delta\lambda,\,0)$
+       \quad\textit{// по \eqref{eq:xpbd}}\\
+\pind3 скорректировать позиции и ориентации тел ограничения\\
+\pind1 нормировать кватернионы всех тел\\
+\pind1 $\mathbf{v} \leftarrow (\mathbf{x} - \mathbf{x}_{\text{prev}}) / h$
+       \quad\textit{// восстановление скоростей \eqref{eq:vel-update}}
+\end{pseudocode}
 
 \begin{figure}[ht]
   \centering

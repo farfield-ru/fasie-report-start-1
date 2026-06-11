@@ -59,6 +59,29 @@
 % Подпись листингов на русском
 \renewcommand{\lstlistingname}{Листинг}
 
+% --- Псевдокод ---------------------------------------------------------------
+% Алгоритмы оформляются псевдокодом в обрамлённом блоке; нумерация общая с
+% листингами. Использование:
+%   \begin{pseudocode}{<подпись>}{<метка>}
+%     строки псевдокода, отступ уровня n --- \pind{n}, перенос строки --- \\
+%   \end{pseudocode}
+\newcommand{\pind}[1]{\hspace*{#1\dimexpr1.6em\relax}}
+\newsavebox{\pseudobox}
+\newenvironment{pseudocode}[2]{%
+  \par\medskip\noindent
+  \begin{minipage}{\linewidth}%
+  \def\pseudocaption{#1}\def\pseudolabel{#2}%
+  \setlength{\fboxsep}{8pt}%
+  \begin{lrbox}{\pseudobox}%
+  \begin{minipage}{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}%
+  \small\setlength{\parindent}{0pt}\raggedright
+}{%
+  \end{minipage}\end{lrbox}%
+  \noindent\fbox{\usebox{\pseudobox}}\par\smallskip
+  \captionof{lstlisting}{\pseudocaption}\label{\pseudolabel}%
+  \end{minipage}\par\medskip
+}
+
 % Гиперссылки (подключать последними)
 \usepackage{hyperref}
 \hypersetup{

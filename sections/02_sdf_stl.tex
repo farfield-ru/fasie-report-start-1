@@ -30,22 +30,6 @@
 внутреннему представлению сцены (\texttt{scene.hpp}), что позволяет переиспользовать
 конвейер отрисовки и подсистему управления камерой.
 
-\begin{lstlisting}[language=XML,caption={Фрагмент описания сцены в формате SDF},label=lst:sdf]
-<sdf version="1.7">
-  <world name="default">
-    <model name="ground">
-      <static>true</static>
-      <link name="surface">
-        <collision name="c"><geometry><plane/></geometry></collision>
-        <visual name="v"><geometry><plane/></geometry></visual>
-      </link>
-    </model>
-    <include><uri>model://table</uri>
-      <pose>1 0 0 0 0 0</pose></include>
-  </world>
-</sdf>
-\end{lstlisting}
-
 \section{Загрузка геометрии STL}
 
 Загрузка STL реализована через vsgXchange: бинарные и текстовые STL-файлы

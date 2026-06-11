@@ -165,22 +165,24 @@ OpenCL~C далёк от современного C++. Vulkan Compute~\cite{vulk
 выполняющий симплектический шаг \eqref{eq:symplectic} и обновление кватерниона
 \eqref{eq:quat-integrate}. SoA-раскладка обеспечивает слитный доступ к
 глобальной памяти: соседние рабочие элементы обращаются к соседним ячейкам
-массивов.
+массивов. Ключевой фрагмент реализации приведён в листинге~\ref{lst:gpu}.
 
-\begin{lstlisting}[language=C++,caption={Ядро интегрирования скоростей и позиций на GPU (схематично)},label=lst:gpu]
-void integrate_gpu(Stream& s, BodyView b, float h, int n_substeps) {
-    const size_t n = b.count;
-    for (int sub = 0; sub < n_substeps; ++sub) {
-        parallel_for(s, n, [=](size_t i) {
-            if (b.inv_mass[i] == 0.0f) return;       // статические тела пропускаем
-            // v += h * (g + M^-1 F)   — симплектический Эйлер
-            b.vel_x[i] += h * b.gx;  b.vel_y[i] += h * b.gy;  b.vel_z[i] += h * b.gz;
-            // x += h * v
-            b.pos_x[i] += h * b.vel_x[i];
-            b.pos_y[i] += h * b.vel_y[i];
-            b.pos_z[i] += h * b.vel_z[i];
-            // q += h * 0.5 * (omega ⊗ q), затем нормировка
-            integrate_orientation(b, i, h);
+\begin{lstlisting}[language=C++,caption={Ядро интегрирования (\texttt{core/src/integrator.cpp}, фрагмент)},label=lst:gpu]
+void integrate(Stream& s, BodyView bodies, const IntegratorParams& params) {
+    const float sub_dt = params.dt / float(params.n_substeps);
+    for (int sub = 0; sub < params.n_substeps; ++sub) {
+        parallel_for(s, bodies.n, [=](size_t i) {
+            // Статические, кинематические и «спящие» тела пропускаем.
+            if (bodies.inv_mass[i] == 0.f) return;
+            if (bodies.flags[i] & BodyFlag::Sleeping) return;
+            // Симплектический Эйлер: сначала скорость, затем позиция.
+            float vx = bodies.vel_x[i] + gx * sub_dt;   // аналогично vy, vz
+            bodies.vel_x[i] = vx;
+            bodies.pos_x[i] += vx * sub_dt;
+            // Кватернион: q += 0.5 * sub_dt * (0, omega) ⊗ q ...
+            // ... затем перенормировка для компенсации дрейфа:
+            const float inv_n = sycl::rsqrt(qw*qw + qx*qx + qy*qy + qz*qz);
+            bodies.rot_w[i] = qw * inv_n;               // аналогично x, y, z
         });
     }
 }
