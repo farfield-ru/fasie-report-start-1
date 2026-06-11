@@ -168,7 +168,102 @@ def classify(contact: PartContact, tol: Tolerances) -> Joint | None:
 экспортируются как ограничения замыкания цикла (в MJCF --- элемент
 \texttt{equality/connect}). Корректность замыкания проверена на классическом
 четырёхзвенном механизме: цикл из четырёх вращательных суставов разбивается на
-остов из трёх суставов и одно замыкающее ограничение.
+остов из трёх суставов и одно замыкающее ограничение. Результат работы
+инструмента на этой сборке показан на рисунке~\ref{fig:step-kin}: слева ---
+исходная STEP-сборка (звенья в трёх слоях по высоте, суставы образованы
+парами <<палец --- отверстие>>), справа --- восстановленная кинематическая
+схема.
+
+\definecolor{kcGround}{rgb}{0.62,0.62,0.62}
+\definecolor{kcCrank}{rgb}{0.85,0.36,0.27}
+\definecolor{kcCoupler}{rgb}{0.27,0.55,0.85}
+\definecolor{kcRocker}{rgb}{0.33,0.70,0.35}
+
+\begin{figure}[ht]
+  \centering
+  \begin{tabular}{cc}
+  % --- а) исходная сборка: косоугольная проекция, мм -> см, ось Z растянута ---
+  \begin{tikzpicture}[x={(0.05cm,0cm)}, y={(0.023cm,0.014cm)}, z={(0cm,0.1cm)},
+                      line cap=round]
+    % станина (z 0..5), пальцы в A и B
+    \draw[line width=0.5cm, kcGround]  (2,0,2.5)  -- (58,0,2.5);
+    \fill[kcGround]  (0,0,2.5)  circle (0.32cm);
+    \fill[kcGround]  (60,0,2.5) circle (0.32cm);
+    % видимые участки пальцев A, B в зазоре (z 5..7)
+    \draw[line width=0.16cm, kcGround!80!black] (0,0,5)  -- (0,0,7);
+    \draw[line width=0.16cm, kcGround!80!black] (60,0,5) -- (60,0,7);
+    % кривошип A-C и коромысло B-D (z 7..12)
+    \draw[line width=0.5cm, kcCrank]  (1,4,9.5)  -- (9,36,9.5);
+    \fill[kcCrank]  (0,0,9.5)  circle (0.3cm);
+    \fill[kcCrank]  (10,40,9.5) circle (0.3cm);
+    \draw[line width=0.5cm, kcRocker] (59,4,9.5) -- (51,36,9.5);
+    \fill[kcRocker] (60,0,9.5) circle (0.3cm);
+    \fill[kcRocker] (50,40,9.5) circle (0.3cm);
+    % верхушки пальцев станины над кривошипом/коромыслом (z 12..17)
+    \draw[line width=0.16cm, kcGround!80!black] (0,0,12)  -- (0,0,17);
+    \fill[kcGround!80!black] (0,0,17)  ellipse [x radius=0.1cm, y radius=0.045cm];
+    \draw[line width=0.16cm, kcGround!80!black] (60,0,12) -- (60,0,17);
+    \fill[kcGround!80!black] (60,0,17) ellipse [x radius=0.1cm, y radius=0.045cm];
+    % видимые участки пальцев C, D в зазоре (z 12..14)
+    \draw[line width=0.16cm, kcCrank!75!black]  (10,40,12) -- (10,40,14);
+    \draw[line width=0.16cm, kcRocker!75!black] (50,40,12) -- (50,40,14);
+    % шатун C-D (z 14..19)
+    \draw[line width=0.5cm, kcCoupler] (14,40,16.5) -- (46,40,16.5);
+    \fill[kcCoupler] (10,40,16.5) circle (0.3cm);
+    \fill[kcCoupler] (50,40,16.5) circle (0.3cm);
+    % верхушки пальцев C, D над шатуном (z 19..24)
+    \draw[line width=0.16cm, kcCrank!75!black]  (10,40,19) -- (10,40,24);
+    \fill[kcCrank!75!black]  (10,40,24) ellipse [x radius=0.1cm, y radius=0.045cm];
+    \draw[line width=0.16cm, kcRocker!75!black] (50,40,19) -- (50,40,24);
+    \fill[kcRocker!75!black] (50,40,24) ellipse [x radius=0.1cm, y radius=0.045cm];
+    % подписи суставов и звеньев
+    \node[font=\scriptsize, below=5pt] at (0,0,0)   {$A$};
+    \node[font=\scriptsize, below=5pt] at (60,0,0)  {$B$};
+    \node[font=\scriptsize, above=3pt] at (10,40,24) {$C$};
+    \node[font=\scriptsize, above=3pt] at (50,40,24) {$D$};
+    \node[font=\scriptsize, below=7pt] at (30,0,0)   {станина};
+    \node[font=\scriptsize, left=5pt]  at (5,20,9.5) {кривошип};
+    \node[font=\scriptsize, right=5pt] at (55,20,9.5){коромысло};
+    \node[font=\scriptsize, above=5pt] at (30,40,19) {шатун};
+  \end{tikzpicture}
+  &
+  % --- б) кинематическая схема (kinematikz), тот же план XY ---
+  \begin{tikzpicture}[scale=1.0]
+    \coordinate (A) at (0,0);
+    \coordinate (B) at (3,0);
+    \coordinate (C) at (0.5,2);
+    \coordinate (D) at (2.5,2);
+    % стойки (станина) в A и B
+    \pic at (A) {frame pivot triangle=0.5cm};
+    \pic at (B) {frame pivot triangle=0.5cm};
+    % звенья
+    \draw[knLinkStyle] (A) -- (C);
+    \draw[knLinkStyle] (C) -- (D);
+    \draw[knLinkStyle] (B) -- (D);
+    % шарниры C и D (A и B нарисованы стойками)
+    \draw[knLinkStyle, fill=white] (C) circle (\pivotRadius);
+    \draw[knLinkStyle, fill=white] (D) circle (\pivotRadius);
+    % замыкающее ограничение: сустав D вне остовного дерева
+    \draw[dashed, thick, red!65!black] (D) circle (0.24cm);
+    \node[font=\scriptsize, text=red!65!black, align=left, anchor=south west]
+      at ($(D)+(0.30,0.34)$) {замыкающее\\ограничение};
+    % подписи суставов и звеньев
+    \node[font=\scriptsize, below left=2pt and 0pt]  at (A) {$A$};
+    \node[font=\scriptsize, below right=2pt and 0pt] at (B) {$B$};
+    \node[font=\scriptsize, above left=2pt and 0pt]  at (C) {$C$};
+    \node[font=\scriptsize, anchor=east] at ($(D)+(-0.28,-0.10)$) {$D$};
+    \node[font=\scriptsize, rotate=76, above=2pt] at ($(A)!0.55!(C)$) {кривошип};
+    \node[font=\scriptsize, above=2pt] at ($(C)!0.45!(D)$) {шатун};
+    \node[font=\scriptsize, rotate=-76, below=2pt] at ($(B)!0.45!(D)$) {коромысло};
+  \end{tikzpicture}
+  \\[2pt]
+  а) исходная STEP-сборка & б) восстановленная кинематическая схема \\
+  \end{tabular}
+  \caption{Результат работы инструмента на четырёхзвенном механизме: четыре
+    вращательных сустава, из которых три образуют остовное дерево и один ---
+    замыкающее ограничение цикла}
+  \label{fig:step-kin}
+\end{figure}
 
 \section{Инерционные характеристики и экспорт}
 
@@ -187,11 +282,6 @@ OpenCASCADE (а не по аппроксимирующей сетке): тенз
 напрямую загружается подсистемой сцен \texttt{modeuler} (раздел~\ref{cha:sdf})
 и физическим ядром.
 
-\screenshot{0.8}{Восстановленная кинематическая схема из STEP-сборки}{Снимок
-экрана: исходная STEP-сборка (например, четырёхзвенный механизм) и построенный
-по ней граф кинематики --- дерево звеньев и суставов с обозначением осей и
-замыкающего ограничения.}{step-kin}
-
 \section{Тестирование}
 
 Тестовые сборки строятся программно (пакет \texttt{cadquery}) и экспортируются
@@ -206,9 +296,9 @@ OpenCASCADE (а не по аппроксимирующей сетке): тенз
         классифицироваться как \texttt{fixed} (болтовая эвристика);
   \item \emph{ползун на V-образной направляющей} --- только плоскостные
         контакты, общий перпендикуляр нормалей задаёт ось \texttt{prismatic};
-  \item \emph{четырёхзвенный механизм} --- замкнутая цепь из четырёх
-        \texttt{revolute}, проверяющая разбиение <<остов + замыкающее
-        ограничение>>.
+  \item \emph{четырёхзвенный механизм} (рисунок~\ref{fig:step-kin}) ---
+        замкнутая цепь из четырёх \texttt{revolute}, проверяющая разбиение
+        <<остов + замыкающее ограничение>>.
 \end{itemize}
 Помимо модульных тестов геометрических предикатов и правил, выполняется
 сквозная проверка: экспортированная модель MJCF загружается в симулятор MuJoCo
